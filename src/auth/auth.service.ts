@@ -4,6 +4,7 @@ import { sign } from 'jsonwebtoken';
 import { Model } from 'mongoose';
 import { Request } from 'express';
 import { User } from 'src/users/models/users.model';
+import { JwtPayload } from './models/jwt-payload.model';
 
 @Injectable()
 export class AuthService {
@@ -18,10 +19,10 @@ export class AuthService {
         });
     }
 
-    public async validateUser(userId: string): Promise<User> {
-        const user = await this.usersModel.findOne({_id: userId})
+    public async validateUser(jwtPayload: JwtPayload): Promise<User> {
+        const user = await this.usersModel.findOne({_id: jwtPayload.userId})
         if(!user){ 
-            throw new UnauthorizedException(`User ${userId} not found`)
+            throw new UnauthorizedException(`User not found`)
         }
         return user;
     }
@@ -32,5 +33,12 @@ export class AuthService {
             throw new BadRequestException(`Bad Request.`)
         }
 
+        const [, token] = authHeader.split(' ');
+
+        return token;
+    }
+
+    public returnJwtExtractor(): (request: Request) => string {
+        return this.jwtExtractor;
     }
 }
